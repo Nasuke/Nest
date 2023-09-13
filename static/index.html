@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>扫码登录</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/axios@1.5.0/dist/axios.min.js"></script>
+</head>
+<body>
+    <img id="img" src="" alt=""/>
+    <div id="info"></div>
+    <script>
+        axios.get('http://localhost:3000/qrcode/generate').then(res => {
+            document.getElementById('img').src = res.data.img;
+            console.log("id", res.data.qrcode_id);
+            // 获取完id调用轮询函数
+            queryStatus(res.data.qrcode_id)
+        })
+
+        function queryStatus(id){
+            axios.get(`http://localhost:3000/qrcode/check/?id=${id}`).then(res => {
+                const status = res.data.status
+                console.log("ress", status);
+                let content = ""
+                switch(status){
+                    case 'noscan': content = "未扫码"; break;
+                    case 'scan_wait_confirm': content = "已扫码 等待确认"; break;
+                    case 'scan_confirm': {
+                        content = '扫码成功 当前登录用户:' + res.data?.userInfo?.username;
+                        break;
+                    }
+                    case 'scan_cancel': content = "取消扫码"; break;
+                    case 'expired': content = "二维码过期"; break;
+                }
+
+                // 显示文字
+                document.getElementById("info").textContent = content
+
+                // 轮训检查状态
+                if(status === 'noscan' || status === 'scan_wait_confirm'){
+                    setTimeout(() => queryStatus(id),1000)
+                }
+            })
+        }
+    </script>
+</body>
+</html>

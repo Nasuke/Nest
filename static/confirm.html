@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扫码登录确认</title>
+    <script src="https://unpkg.com/axios@1.5.0/dist/axios.min.js"></script>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        height: 100vh;
+      }
+        #info {
+            height: 400px;
+            line-height: 400px;
+            font-size: 20px;
+            padding: 20px;
+        }
+        #confirm, #cancel{
+            display: block;
+            width: 80%;
+            line-height: 40px;
+            font-size: 20px;
+            margin-bottom: 20px;
+            margin: 0 auto;
+        }
+        #confirm {
+            background: skyblue;
+        }
+        .user button {
+          padding: 10px 15px;
+          background-color: #FAFA;
+          border-radius: 9999px;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="user">
+        <button id="wan">登录婉婉账号</button>
+        <button id="lemon">登录柠檬茶小子账号</button>
+    </div>
+
+    <div style="width: 600px;">
+        <button id="confirm" style="margin-bottom: 3rem;">确认登录</button>
+        <button id="cancel">取消</button>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search.slice(1))
+        const id = params.get('id')
+
+        axios.get(`http://192.168.126.50:3000/qrcode/check?id=${id}`).catch(e => {
+            alert("二维码已过期")
+        })
+        console.log("id", id);
+
+        document.getElementById('confirm').addEventListener('click', () => {
+            axios.get(`http://192.168.126.50:3000/qrcode/confirm?id=${id}`, {
+                headers: {
+                    authorization: 'Bearer ' + token
+                }
+            }).catch(e => {
+                alert("二维码已过期")
+            })
+        })
+
+        document.getElementById('cancel').addEventListener('click', () => {
+            axios.get(`http://192.168.126.50:3000/qrcode/cancel?id=${id}`).catch(e => {
+                alert("二维码已过期")
+            })
+        })
+
+        let token = ''
+        document.getElementById('wan').addEventListener('click', () => {
+            axios.get(`http://192.168.126.50:3000/login`, {
+                params:{
+                    username: 'wanwan',
+                    pwd: "wawys"
+                }
+            }).then(res => {
+                document.getElementById("wan").textContent = "原神启动中~"
+                token = res.data.token
+            })
+        })
+
+        document.getElementById('lemon').addEventListener('click', () => {
+            console.log("click");
+            axios.get(`http://192.168.126.50:3000/login`, {
+                params:{
+                    username: '柠檬茶小子',
+                    pwd: "wahnmc"
+                }
+            }).then(res => {
+                console.log("token is", res.data);
+                document.getElementById("lemon").textContent = '柠檬茶启动中~'
+                token = res.data.token
+            })
+        })
+    </script>
+</body>
+</html>
